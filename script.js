@@ -4,25 +4,25 @@ const products = {
         name: 'ترينج أديداس وتر بروف',
         price: 1750,
         originalPrice: 2000,
-        images: ['2.jpeg', '3.jpeg', '4.jpeg', '5.jpeg'],
+        images: ['2.jpg', '3.jpg', '4.jpg', '5.jpg'],
         description: 'ترينج أديداس وتر بروف عالي الجودة مصنوع من مواد متينة ومقاومة للماء. مناسب لجميع الأنشطة الرياضية.'
     },
     2: {
         name: 'ترينج أديداس ميرور أوريچينال',
         price: 2450,
-        images: ['7.jpeg', '8.jpeg', '9.jpeg', '10.jpeg'],
+        images: ['7.jpg', '8.jpg', '9.jpg', '10.jpg'],
         description: 'ترينج أديداس ميرور أوريچينال الأصلي بتصميم عصري وراقي. مناسب للرياضيين المحترفين.'
     },
     3: {
         name: 'ترينج نايك ميرور أوريچينال',
         price: 2450,
-        images: ['11.jpeg', '12.jpeg', '13.jpeg'],
+        images: ['11.jpg', '12.jpg', '13.jpg'],
         description: 'ترينج نايك ميرور أوريچينال بجودة عالية جداً. يوفر راحة قصوى وأداء ممتاز.'
     },
     4: {
         name: 'جاكيت سبورت بناتي ميرور أوريچينال – Sports Jacket',
         price: 1200,
-        images: ['14.jpeg', '15.jpeg', '16.jpeg', '17.jpeg'],
+        images: ['14.jpg', '15.jpg', '16.jpg', '17.jpg'],
         description: 'جاكيت سبورت بناتي ميرور أوريچينال بتصميم أنيق وحديث. مثالي للفتيات الرياضيات.'
     }
 };
@@ -59,6 +59,36 @@ function goToSlide(n) {
 setInterval(() => {
     changeSlide(1);
 }, 5000);
+
+// ==================== Product Image Carousel ====================
+const productImageCarousels = {};
+
+function initProductCarousels() {
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach((card, index) => {
+        const productId = index + 1;
+        const product = products[productId];
+        
+        if (product && product.images.length > 1) {
+            const imageElement = card.querySelector('.product-image img');
+            let currentImageIdx = 0;
+            
+            productImageCarousels[productId] = setInterval(() => {
+                currentImageIdx = (currentImageIdx + 1) % product.images.length;
+                imageElement.style.opacity = '0.7';
+                
+                setTimeout(() => {
+                    imageElement.src = `images/${product.images[currentImageIdx]}`;
+                    imageElement.style.opacity = '1';
+                }, 150);
+            }, 3000);
+        }
+    });
+}
+
+// Initialize carousels when page loads
+document.addEventListener('DOMContentLoaded', initProductCarousels);
 
 // ==================== Product Modal ====================
 let currentProductId = null;
