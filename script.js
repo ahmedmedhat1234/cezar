@@ -23,7 +23,7 @@ const products = {
         sizes: ['S', 'M', 'L', 'XL', 'XXL']
     },
     4: {
-        name: 'جاكيت سبورت بناتي ميرور أوريچينال – Sports Jacket',
+        name: 'جاكيت سبورت بناتي ميرور أوريچينال',
         price: 1200,
         images: ['14.jpg', '15.jpg', '16.jpg', '17.jpg'],
         description: 'جاكيت سبورت بناتي ميرور أوريچينال بتصميم أنيق وحديث. مثالي للفتيات الرياضيات.',
@@ -35,7 +35,6 @@ const products = {
 class ShoppingCart {
     constructor() {
         this.items = this.loadFromStorage();
-        this.listeners = [];
     }
 
     loadFromStorage() {
@@ -45,7 +44,7 @@ class ShoppingCart {
 
     saveToStorage() {
         localStorage.setItem('cezar_cart', JSON.stringify(this.items));
-        this.notifyListeners();
+        updateCartCount();
     }
 
     addItem(productId, quantity = 1, size = null) {
@@ -70,6 +69,7 @@ class ShoppingCart {
         }
 
         this.saveToStorage();
+        showNotification('تم إضافة المنتج للسلة بنجاح!', 'success');
         return true;
     }
 
@@ -94,482 +94,280 @@ class ShoppingCart {
         }
     }
 
-    getItemCount() {
-        return this.items.reduce((total, item) => total + item.quantity, 0);
-    }
-
-    getTotalPrice() {
+    getTotal() {
         return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
 
-    getItems() {
-        return this.items;
+    getItemCount() {
+        return this.items.reduce((total, item) => total + item.quantity, 0);
     }
 
     clear() {
         this.items = [];
         this.saveToStorage();
     }
-
-    generateWhatsAppMessage() {
-        if (this.items.length === 0) {
-            return 'السلة فارغة';
-        }
-
-        let message = '*طلب من Cezar Sports Wear*\n\n';
-        message += '*تفاصيل الطلب:*\n';
-        message += '─────────────────\n';
-
-        this.items.forEach((item, index) => {
-            message += `${index + 1}. ${item.name}\n`;
-            if (item.size) {
-                message += `   المقاس: ${item.size}\n`;
-            }
-            message += `   السعر: ${item.price.toLocaleString('ar-EG')} ج.م\n`;
-            message += `   الكمية: ${item.quantity}\n`;
-            message += `   الإجمالي: ${(item.price * item.quantity).toLocaleString('ar-EG')} ج.م\n`;
-            message += '\n';
-        });
-
-        message += '─────────────────\n';
-        message += `*الإجمالي الكلي: ${this.getTotalPrice().toLocaleString('ar-EG')} ج.م*\n\n`;
-        message += 'شكراً لاختيارك Cezar Sports Wear 🙏';
-
-        return message;
-    }
-
-    sendToWhatsApp(phoneNumber = '201022319907') {
-        const message = this.generateWhatsAppMessage();
-        const encodedMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-        window.open(whatsappUrl, '_blank');
-    }
-
-    subscribe(callback) {
-        this.listeners.push(callback);
-    }
-
-    notifyListeners() {
-        this.listeners.forEach(callback => callback());
-    }
 }
 
+// Initialize cart
 const cart = new ShoppingCart();
 
-// ==================== Update Cart UI ====================
-function updateCartUI() {
-    const cartCount = document.getElementById('cartCount');
-    if (cartCount) {
-        const count = cart.getItemCount();
-        cartCount.textContent = count;
-        cartCount.style.display = count > 0 ? 'flex' : 'none';
+// ==================== DOM Initialization ====================
+document.addEventListener('DOMContentLoaded', function() {
+    renderProducts();
+    updateCartCount();
+    setupSlider();
+});
+
+// ==================== Product Rendering ====================
+function renderProducts() {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    
+    for (const [id, product] of Object.entries(products)) {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.onclick = () => openProduct(id);
+
+        const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+        const discountPercent = hasDiscount ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+
+        card.innerHTML = `
+            <div class="product-image">
+                <img src="images/${product.images[0]}" alt="${product.name}">
+                ${hasDiscount ? `<div class="product-badge">خصم ${discountPercent}%</div>` : ''}
+            </div>
+            <div class="product-info">
+                <h3 class="product-name">${product.name}</h3>
+                <div class="product-price">
+                    <span class="price-current">${product.price} ج</span>
+                    ${hasDiscount ? `<span class="price-original">${product.originalPrice} ج</span>` : ''}
+                </div>
+                <button class="btn-order" onclick="event.stopPropagation(); quickAddToCart(${id})">
+                    <i class="fas fa-shopping-cart"></i> أضف للسلة
+                </button>
+            </div>
+        `;
+
+        grid.appendChild(card);
     }
 }
 
-// Subscribe to cart changes
-cart.subscribe(updateCartUI);
+// ==================== Product Modal Functions ====================
+let currentProductId = null;
+let selectedSize = null;
 
-// ==================== Slider Functionality ====================
+function openProduct(productId) {
+    currentProductId = productId;
+    selectedSize = null;
+    const product = products[productId];
+    const modal = document.getElementById('productModal');
+
+    // Set product details
+    document.getElementById('modalProductName').textContent = product.name;
+    document.getElementById('modalPrice').textContent = `${product.price} ج`;
+    document.getElementById('modalDescription').textContent = product.description;
+    document.getElementById('modalQuantity').value = 1;
+
+    // Set main image
+    const mainImage = document.getElementById('mainImage');
+    mainImage.src = `images/${product.images[0]}`;
+
+    // Set thumbnails
+    const thumbnails = document.getElementById('thumbnails');
+    thumbnails.innerHTML = '';
+    product.images.forEach((img, index) => {
+        const thumb = document.createElement('img');
+        thumb.src = `images/${img}`;
+        thumb.className = index === 0 ? 'active' : '';
+        thumb.onclick = (e) => {
+            e.stopPropagation();
+            mainImage.src = `images/${img}`;
+            document.querySelectorAll('#thumbnails img').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+        };
+        thumbnails.appendChild(thumb);
+    });
+
+    // Set sizes
+    const sizesDiv = document.getElementById('modalSizes');
+    sizesDiv.innerHTML = '<label>المقاس:</label><div class="size-options">';
+    product.sizes.forEach(size => {
+        const btn = document.createElement('button');
+        btn.className = 'size-option';
+        btn.textContent = size;
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.size-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedSize = size;
+        };
+        sizesDiv.querySelector('.size-options').appendChild(btn);
+    });
+    sizesDiv.innerHTML += '</div>';
+
+    modal.classList.add('active');
+}
+
+function closeProduct() {
+    document.getElementById('productModal').classList.remove('active');
+}
+
+function addToCartFromModal() {
+    if (!currentProductId) return;
+    
+    const quantity = parseInt(document.getElementById('modalQuantity').value) || 1;
+    cart.addItem(currentProductId, quantity, selectedSize);
+    closeProduct();
+}
+
+function quickAddToCart(productId) {
+    cart.addItem(productId, 1, null);
+}
+
+// ==================== Shopping Cart Functions ====================
+function openCart() {
+    const modal = document.getElementById('cartModal');
+    renderCartItems();
+    modal.classList.add('show');
+}
+
+function closeCart() {
+    document.getElementById('cartModal').classList.remove('show');
+}
+
+function renderCartItems() {
+    const cartItemsDiv = document.getElementById('cartItems');
+    
+    if (cart.items.length === 0) {
+        cartItemsDiv.innerHTML = '<div class="cart-empty"><p>السلة فارغة</p></div>';
+        return;
+    }
+
+    cartItemsDiv.innerHTML = '';
+    
+    cart.items.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'cart-item';
+        
+        itemDiv.innerHTML = `
+            <div class="cart-item-image">
+                <img src="images/${item.image}" alt="${item.name}">
+            </div>
+            <div class="cart-item-details">
+                <div class="cart-item-name">${item.name}</div>
+                ${item.size ? `<div class="cart-item-size">المقاس: ${item.size}</div>` : ''}
+                <div class="cart-item-price">${item.price} ج</div>
+                <div class="cart-item-quantity">
+                    <button class="qty-btn" onclick="updateQty(${item.id}, ${item.quantity - 1}, '${item.size}')">-</button>
+                    <input type="number" class="qty-input" value="${item.quantity}" readonly>
+                    <button class="qty-btn" onclick="updateQty(${item.id}, ${item.quantity + 1}, '${item.size}')">+</button>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id}, '${item.size}')">حذف</button>
+                </div>
+            </div>
+        `;
+        
+        cartItemsDiv.appendChild(itemDiv);
+    });
+
+    // Update total
+    const total = cart.getTotal();
+    document.getElementById('cartTotal').textContent = `${total} ج`;
+}
+
+function updateQty(productId, quantity, size) {
+    cart.updateQuantity(productId, quantity, size === 'null' ? null : size);
+    renderCartItems();
+}
+
+function removeFromCart(productId, size) {
+    cart.removeItem(productId, size === 'null' ? null : size);
+    renderCartItems();
+}
+
+function updateCartCount() {
+    const count = cart.getItemCount();
+    const countElement = document.getElementById('cartCount');
+    if (count > 0) {
+        countElement.textContent = count;
+        countElement.style.display = 'flex';
+    } else {
+        countElement.style.display = 'none';
+    }
+}
+
+function checkoutCart() {
+    if (cart.items.length === 0) {
+        showNotification('السلة فارغة!', 'error');
+        return;
+    }
+
+    // Build message
+    let message = 'السلام عليكم ورحمة الله وبركاته\n\n';
+    message += 'أود طلب المنتجات التالية:\n\n';
+
+    cart.items.forEach((item, index) => {
+        message += `${index + 1}. ${item.name}`;
+        if (item.size) message += ` - المقاس: ${item.size}`;
+        message += `\n   الكمية: ${item.quantity} × ${item.price} ج = ${item.quantity * item.price} ج\n\n`;
+    });
+
+    const total = cart.getTotal();
+    message += `الإجمالي: ${total} ج`;
+
+    // Encode and send to WhatsApp
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/201022319907?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+    
+    // Clear cart after checkout
+    setTimeout(() => {
+        cart.clear();
+        renderCartItems();
+        closeCart();
+        showNotification('تم إرسال الطلب! شكراً لك', 'success');
+    }, 500);
+}
+
+// ==================== Slider Functions ====================
 let currentSlide = 0;
 const slides = document.querySelectorAll('.slider-image');
-const dots = document.querySelectorAll('.dot');
 
-function showSlide(n) {
-    if (slides.length === 0) return;
-    
-    slides.forEach(slide => slide.classList.remove('active'));
-    dots.forEach(dot => dot.classList.remove('active'));
-    
-    slides[n].classList.add('active');
-    if (dots[n]) dots[n].classList.add('active');
-}
-
-function changeSlide(n) {
-    if (slides.length === 0) return;
-    
-    currentSlide += n;
-    if (currentSlide >= slides.length) {
-        currentSlide = 0;
-    } else if (currentSlide < 0) {
-        currentSlide = slides.length - 1;
-    }
-    showSlide(currentSlide);
-}
-
-function goToSlide(n) {
-    currentSlide = n;
-    showSlide(currentSlide);
-}
-
-// Auto-slide every 5 seconds
-if (slides.length > 0) {
+function setupSlider() {
+    // Auto-rotate slides every 5 seconds
     setInterval(() => {
         changeSlide(1);
     }, 5000);
 }
 
-// ==================== Product Image Carousel ====================
-const productImageCarousels = {};
-
-function initProductCarousels() {
-    const productCards = document.querySelectorAll('.product-card');
+function changeSlide(direction) {
+    const images = document.querySelectorAll('.slider-image');
+    const dots = document.querySelectorAll('.dot');
     
-    productCards.forEach((card, index) => {
-        const productId = index + 1;
-        const product = products[productId];
-        
-        if (product && product.images.length > 1) {
-            const imageElement = card.querySelector('.product-image img');
-            let currentImageIdx = 0;
-            
-            productImageCarousels[productId] = setInterval(() => {
-                currentImageIdx = (currentImageIdx + 1) % product.images.length;
-                imageElement.style.opacity = '0.7';
-                
-                setTimeout(() => {
-                    imageElement.src = `images/${product.images[currentImageIdx]}`;
-                    imageElement.style.opacity = '1';
-                }, 150);
-            }, 3000);
-        }
-    });
+    images.forEach(img => img.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    currentSlide = (currentSlide + direction + images.length) % images.length;
+    
+    images[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
 }
 
-// Initialize carousels when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    initProductCarousels();
-    updateCartUI();
-});
-
-// ==================== Product Modal ====================
-let currentProductId = null;
-let currentImageIndex = 0;
-
-function openProduct(productId) {
-    currentProductId = productId;
-    currentImageIndex = 0;
-    const product = products[productId];
-    const modal = document.getElementById('productModal');
+function goToSlide(index) {
+    const images = document.querySelectorAll('.slider-image');
+    const dots = document.querySelectorAll('.dot');
     
-    // Set product details
-    document.getElementById('modalProductName').textContent = product.name;
-    document.getElementById('modalPrice').textContent = product.price + ' ج';
-    document.getElementById('modalDescription').textContent = product.description;
+    images.forEach(img => img.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
     
-    // Set main image
-    const mainImage = document.getElementById('mainImage');
-    mainImage.src = `images/${product.images[0]}`;
-    
-    // Create thumbnails
-    const thumbnailsContainer = document.getElementById('thumbnails');
-    thumbnailsContainer.innerHTML = '';
-    
-    product.images.forEach((image, index) => {
-        const img = document.createElement('img');
-        img.src = `images/${image}`;
-        img.alt = `Product image ${index + 1}`;
-        if (index === 0) img.classList.add('active');
-        img.onclick = () => changeMainImage(index);
-        thumbnailsContainer.appendChild(img);
-    });
-
-    // Create size selector
-    const sizeContainer = document.getElementById('modalSizes');
-    if (sizeContainer && product.sizes) {
-        sizeContainer.innerHTML = '<label>اختر المقاس:</label><div class="size-options">';
-        product.sizes.forEach(size => {
-            sizeContainer.innerHTML += `<button class="size-option" data-size="${size}">${size}</button>`;
-        });
-        sizeContainer.innerHTML += '</div>';
-        
-        // Add size selection handlers
-        document.querySelectorAll('.size-option').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.size-option').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-            });
-        });
-    }
-    
-    modal.classList.add('active');
+    currentSlide = index;
+    images[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
 }
 
-function closeProduct() {
-    const modal = document.getElementById('productModal');
-    modal.classList.remove('active');
-}
-
-function changeMainImage(index) {
-    const product = products[currentProductId];
-    const mainImage = document.getElementById('mainImage');
-    const thumbnails = document.querySelectorAll('.gallery-thumbnails img');
-    
-    mainImage.src = `images/${product.images[index]}`;
-    
-    thumbnails.forEach((thumb, i) => {
-        if (i === index) {
-            thumb.classList.add('active');
-        } else {
-            thumb.classList.remove('active');
-        }
-    });
-    
-    currentImageIndex = index;
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('productModal');
-    if (event.target === modal) {
-        closeProduct();
-    }
-};
-
-// ==================== Add to Cart from Modal ====================
-function addToCartFromModal() {
-    const product = products[currentProductId];
-    const quantity = parseInt(document.getElementById('modalQuantity').value) || 1;
-    const selectedSize = document.querySelector('.size-option.selected');
-    const size = selectedSize ? selectedSize.dataset.size : null;
-
-    cart.addItem(currentProductId, quantity, size);
-    
-    // Show success message
-    showNotification('تم إضافة المنتج للسلة بنجاح!', 'success');
-    closeProduct();
-}
-
-// ==================== Shopping Cart Modal ====================
-function openCart() {
-    const cartModal = document.getElementById('cartModal');
-    if (cartModal) {
-        cartModal.classList.add('show');
-        renderCartItems();
-    }
-}
-
-function closeCart() {
-    const cartModal = document.getElementById('cartModal');
-    if (cartModal) {
-        cartModal.classList.remove('show');
-    }
-}
-
-function renderCartItems() {
-    const cartItemsContainer = document.getElementById('cartItems');
-    const items = cart.getItems();
-
-    if (items.length === 0) {
-        cartItemsContainer.innerHTML = '<div class="cart-empty"><p>السلة فارغة</p></div>';
-    } else {
-        cartItemsContainer.innerHTML = items.map(item => `
-            <div class="cart-item">
-                <div class="cart-item-image">
-                    <img src="images/${item.image}" alt="${item.name}">
-                </div>
-                <div class="cart-item-details">
-                    <div class="cart-item-name">${item.name}</div>
-                    ${item.size ? `<div class="cart-item-size">المقاس: ${item.size}</div>` : ''}
-                    <div class="cart-item-price">${item.price.toLocaleString('ar-EG')} ج.م</div>
-                    <div class="cart-item-quantity">
-                        <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1}, '${item.size || ''}')">-</button>
-                        <input type="number" class="qty-input" value="${item.quantity}" readonly>
-                        <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1}, '${item.size || ''}')">+</button>
-                        <button class="remove-btn" onclick="removeFromCart(${item.id}, '${item.size || ''}')">حذف</button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // Update summary
-    const totalPrice = cart.getTotalPrice();
-    document.getElementById('cartTotal').textContent = totalPrice.toLocaleString('ar-EG');
-}
-
-function updateCartQuantity(productId, quantity, size) {
-    const sizeValue = size === '' ? null : size;
-    cart.updateQuantity(productId, quantity, sizeValue);
-    renderCartItems();
-}
-
-function removeFromCart(productId, size) {
-    const sizeValue = size === '' ? null : size;
-    cart.removeItem(productId, sizeValue);
-    renderCartItems();
-}
-
-function checkoutCart() {
-    if (cart.getItems().length === 0) {
-        showNotification('السلة فارغة!', 'error');
-        return;
-    }
-    
-    cart.sendToWhatsApp('201022319907');
-    cart.clear();
-    renderCartItems();
-    closeCart();
-    showNotification('تم إرسال الطلب عبر الواتساب!', 'success');
-}
-
-// ==================== Notification System ====================
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 10);
-
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 3000);
-}
-
-// ==================== Order Functionality (Legacy) ====================
-function orderNow(productName, price) {
-    showOrderForm(productName, price);
-}
-
-function orderFromModal() {
-    const product = products[currentProductId];
-    showOrderForm(product.name, product.price);
-}
-
-function showOrderForm(productName, price) {
-    // Create order form modal if it doesn't exist
-    let orderModal = document.getElementById('orderModal');
-    if (!orderModal) {
-        const orderHTML = `
-            <div id="orderModal" class="order-modal">
-                <div class="order-form-container">
-                    <span class="close" onclick="closeOrderForm()">&times;</span>
-                    <h2>نموذج الطلب</h2>
-                    <form id="orderForm" onsubmit="submitOrder(event)">
-                        <div class="form-group">
-                            <label>اسم المنتج:</label>
-                            <input type="text" id="productNameInput" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>السعر:</label>
-                            <input type="text" id="priceInput" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>الكمية:</label>
-                            <input type="number" id="quantityInput" min="1" value="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label>مكان السكن:</label>
-                            <input type="text" id="addressInput" placeholder="أدخل مكان السكن" required>
-                        </div>
-                        <div class="form-group">
-                            <label>رقم الهاتف:</label>
-                            <input type="tel" id="phoneInput" placeholder="أدخل رقم الهاتف" required>
-                        </div>
-                        <div class="form-group">
-                            <label>رقم الهاتف البديل:</label>
-                            <input type="tel" id="alternatePhoneInput" placeholder="أدخل رقم الهاتف البديل (اختياري)">
-                        </div>
-                        <div class="form-buttons">
-                            <button type="submit" class="btn-submit">اطلب عبر الواتساب</button>
-                            <button type="button" class="btn-cancel" onclick="closeOrderForm()">إلغاء</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', orderHTML);
-        orderModal = document.getElementById('orderModal');
-    }
-    
-    // Fill in the form
-    document.getElementById('productNameInput').value = productName;
-    document.getElementById('priceInput').value = price + ' ج';
-    document.getElementById('quantityInput').value = 1;
-    
-    // Show the modal
-    orderModal.classList.add('active');
-}
-
-function closeOrderForm() {
-    const orderModal = document.getElementById('orderModal');
-    if (orderModal) {
-        orderModal.classList.remove('active');
-    }
-}
-
-function submitOrder(event) {
-    event.preventDefault();
-    
-    const productName = document.getElementById('productNameInput').value;
-    const price = document.getElementById('priceInput').value;
-    const quantity = document.getElementById('quantityInput').value;
-    const address = document.getElementById('addressInput').value;
-    const phone = document.getElementById('phoneInput').value;
-    const alternatePhone = document.getElementById('alternatePhoneInput').value;
-    
-    // Calculate total price
-    const priceNumber = parseInt(price);
-    const totalPrice = priceNumber * quantity;
-    
-    // Create WhatsApp message
-    const message = `مرحباً، أود طلب المنتج التالي:\n\n` +
-                   `📦 المنتج: ${productName}\n` +
-                   `💰 السعر: ${price}\n` +
-                   `📊 الكمية: ${quantity}\n` +
-                   `💵 الإجمالي: ${totalPrice} ج\n\n` +
-                   `📍 مكان السكن: ${address}\n` +
-                   `📱 رقم الهاتف: ${phone}\n` +
-                   `📞 رقم الهاتف البديل: ${alternatePhone || 'لا يوجد'}\n\n` +
-                   `شكراً لتعاملكم معنا!`;
-    
-    // WhatsApp API link
-    const whatsappNumber = '201022319907'; // Without the +
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    
-    // Open WhatsApp
-    window.open(whatsappUrl, '_blank');
-    
-    // Close the form
-    closeOrderForm();
-}
-
-// Close order modal when clicking outside
-window.addEventListener('click', function(event) {
-    const orderModal = document.getElementById('orderModal');
-    if (orderModal && event.target === orderModal) {
-        closeOrderForm();
-    }
-});
-
-// ==================== Navigation Active Link ====================
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', function() {
-        document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-    });
-});
-
-// ==================== Smooth Scroll for Navigation ====================
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-        const href = this.getAttribute('href');
-        if (href !== '#' && document.querySelector(href)) {
-            e.preventDefault();
-            document.querySelector(href).scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
-    });
-});
-
-// ==================== Mobile Menu Toggle ====================
+// ==================== Mobile Menu ====================
 function toggleMobileMenu() {
     const navLinks = document.querySelector('.nav-links');
     if (navLinks) {
@@ -578,11 +376,38 @@ function toggleMobileMenu() {
 }
 
 // Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        const navLinks = document.querySelector('.nav-links');
-        if (navLinks) {
-            navLinks.classList.remove('show');
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-links a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            const menu = document.querySelector('.nav-links');
+            if (menu) menu.classList.remove('show');
+        });
     });
 });
+
+// ==================== Notifications ====================
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type} show`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// ==================== Close modals when clicking outside ====================
+window.onclick = function(event) {
+    const productModal = document.getElementById('productModal');
+    const cartModal = document.getElementById('cartModal');
+    
+    if (event.target === productModal) {
+        closeProduct();
+    }
+    
+    if (event.target === cartModal) {
+        closeCart();
+    }
+}
