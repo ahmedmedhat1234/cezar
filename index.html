@@ -13,15 +13,27 @@
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="container">
-            <div class="logo">
-                <img src="images/18.png" alt="Cezar Logo" class="logo-img">
-                <span class="brand-name">Cezar</span>
+            <div class="navbar-content">
+                <div class="logo">
+                    <img src="images/18.png" alt="Cezar Logo" class="logo-img">
+                    <span class="brand-name">Cezar</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#home" class="active">الرئيسية</a></li>
+                    <li><a href="#products">المنتجات</a></li>
+                    <li><a href="pages/about.html">من نحن</a></li>
+                    <li><a href="pages/contact.html">اتصل بنا</a></li>
+                </ul>
+                <div class="header-actions">
+                    <button class="cart-icon" onclick="openCart()">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="cartCount" class="cart-count" style="display: none;">0</span>
+                    </button>
+                    <button class="menu-toggle" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
             </div>
-            <ul class="nav-links">
-                <li><a href="#home" class="active">الرئيسية</a></li>
-                <li><a href="#products">المنتجات</a></li>
-                <li><a href="#contact">اتصل بنا</a></li>
-            </ul>
         </div>
     </nav>
 
@@ -39,8 +51,8 @@
                 <i class="fas fa-chevron-right"></i>
             </button>
             <div class="slider-dots">
-                <span class="dot active" onclick="currentSlide(0)"></span>
-                <span class="dot" onclick="currentSlide(1)"></span>
+                <span class="dot active" onclick="goToSlide(0)"></span>
+                <span class="dot" onclick="goToSlide(1)"></span>
             </div>
         </div>
     </section>
@@ -62,8 +74,8 @@
                             <span class="price-current">1,750 ج</span>
                             <span class="price-original">2,000 ج</span>
                         </div>
-                        <button class="btn-order" onclick="event.stopPropagation(); orderNow('ترينج أديداس وتر بروف', 1750)">
-                            <i class="fas fa-shopping-cart"></i> اطلب الآن
+                        <button class="btn-add-to-cart" onclick="event.stopPropagation()">
+                            <i class="fas fa-shopping-cart"></i> أضف للسلة
                         </button>
                     </div>
                 </div>
@@ -78,8 +90,8 @@
                         <div class="product-price">
                             <span class="price-current">2,450 ج</span>
                         </div>
-                        <button class="btn-order" onclick="event.stopPropagation(); orderNow('ترينج أديداس ميرور أوريچينال', 2450)">
-                            <i class="fas fa-shopping-cart"></i> اطلب الآن
+                        <button class="btn-add-to-cart" onclick="event.stopPropagation()">
+                            <i class="fas fa-shopping-cart"></i> أضف للسلة
                         </button>
                     </div>
                 </div>
@@ -94,8 +106,8 @@
                         <div class="product-price">
                             <span class="price-current">2,450 ج</span>
                         </div>
-                        <button class="btn-order" onclick="event.stopPropagation(); orderNow('ترينج نايك ميرور أوريچينال', 2450)">
-                            <i class="fas fa-shopping-cart"></i> اطلب الآن
+                        <button class="btn-add-to-cart" onclick="event.stopPropagation()">
+                            <i class="fas fa-shopping-cart"></i> أضف للسلة
                         </button>
                     </div>
                 </div>
@@ -110,8 +122,8 @@
                         <div class="product-price">
                             <span class="price-current">1,200 ج</span>
                         </div>
-                        <button class="btn-order" onclick="event.stopPropagation(); orderNow('جاكيت سبورت بناتي ميرور أوريچينال', 1200)">
-                            <i class="fas fa-shopping-cart"></i> اطلب الآن
+                        <button class="btn-add-to-cart" onclick="event.stopPropagation()">
+                            <i class="fas fa-shopping-cart"></i> أضف للسلة
                         </button>
                     </div>
                 </div>
@@ -174,18 +186,45 @@
         </div>
     </section>
 
-    <!-- Footer with Developer Link -->
+    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-brand">
+                <div class="footer-section">
                     <h3>Cezar Sports Wear</h3>
                     <p>ملابس رياضية عصرية وفخمة لكل الرياضيين</p>
                 </div>
-                <div class="footer-developer">
-                    <a href="https://ahmedmedhat1234.github.io/aloush11/" target="_blank" class="developer-btn">
-                        <i class="fas fa-code"></i> موقع المطور
-                    </a>
+                <div class="footer-section">
+                    <h3>روابط سريعة</h3>
+                    <ul>
+                        <li><a href="#home">الرئيسية</a></li>
+                        <li><a href="#products">المنتجات</a></li>
+                        <li><a href="pages/about.html">من نحن</a></li>
+                        <li><a href="pages/contact.html">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>معلومات إضافية</h3>
+                    <ul>
+                        <li><a href="pages/faq.html">الأسئلة الشائعة</a></li>
+                        <li><a href="pages/shipping.html">الشحن والتوصيل</a></li>
+                        <li><a href="pages/returns.html">سياسة الإرجاع</a></li>
+                        <li><a href="pages/privacy.html">سياسة الخصوصية</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>تابعنا</h3>
+                    <div class="footer-social">
+                        <a href="https://www.instagram.com/cezar_sports_wear/" target="_blank" class="social-icon">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.facebook.com/cezarsportswear.egy" target="_blank" class="social-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://wa.me/201022319907" target="_blank" class="social-icon">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -207,10 +246,40 @@
                     <h2 id="modalProductName"></h2>
                     <div class="modal-price" id="modalPrice"></div>
                     <p id="modalDescription"></p>
-                    <button class="btn-order-large" onclick="orderFromModal()">
-                        <i class="fas fa-shopping-bag"></i> اطلب الآن عبر الواتساب
+                    <div id="modalSizes"></div>
+                    <div class="quantity-selector">
+                        <label>الكمية:</label>
+                        <input type="number" id="modalQuantity" min="1" value="1">
+                    </div>
+                    <button class="btn-add-to-cart-detail" onclick="addToCartFromModal()">
+                        <i class="fas fa-shopping-bag"></i> أضف للسلة
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Modal -->
+    <div id="cartModal" class="cart-modal">
+        <div class="cart-modal-content">
+            <div class="modal-header">
+                <h2>السلة</h2>
+                <button class="close-btn" onclick="closeCart()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="cartItems"></div>
+            </div>
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>الإجمالي:</span>
+                    <span id="cartTotal">0</span>
+                </div>
+                <button class="btn-checkout" onclick="checkoutCart()">
+                    <i class="fab fa-whatsapp"></i> إتمام الطلب عبر الواتساب
+                </button>
+                <button class="btn-continue-shopping" onclick="closeCart()">
+                    متابعة التسوق
+                </button>
             </div>
         </div>
     </div>
