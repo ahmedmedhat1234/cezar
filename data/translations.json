@@ -1,0 +1,104 @@
+{
+  "en": {
+    "header": {
+      "home": "Home",
+      "allProducts": "All Products",
+      "aboutUs": "About Us",
+      "contactUs": "Contact Us",
+      "cart": "Cart",
+      "search": "Search"
+    },
+    "hero": {
+      "title": "New Season Style Essentials",
+      "subtitle": "Discover premium fashion and apparel",
+      "cta": "Shop Now"
+    },
+    "products": {
+      "featured": "Featured Products",
+      "allProducts": "All Products",
+      "addToCart": "Add to Cart",
+      "orderNow": "Order Now",
+      "viewDetails": "View Details",
+      "price": "Price",
+      "originalPrice": "Original Price",
+      "discount": "Discount"
+    },
+    "footer": {
+      "quickLinks": "Quick Links",
+      "about": "About",
+      "contact": "Contact",
+      "faqs": "FAQs",
+      "shipping": "Shipping & Delivery",
+      "returns": "Return & Exchange",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "followUs": "Follow Us",
+      "rights": "All rights reserved"
+    },
+    "cart": {
+      "empty": "Your cart is empty",
+      "total": "Total",
+      "checkout": "Checkout",
+      "continueShopping": "Continue Shopping"
+    },
+    "common": {
+      "loading": "Loading...",
+      "error": "An error occurred",
+      "success": "Success",
+      "close": "Close",
+      "save": "Save",
+      "cancel": "Cancel"
+    }
+  },
+  "ar": {
+    "header": {
+      "home": "الرئيسية",
+      "allProducts": "جميع المنتجات",
+      "aboutUs": "من نحن",
+      "contactUs": "اتصل بنا",
+      "cart": "السلة",
+      "search": "بحث"
+    },
+    "hero": {
+      "title": "أساسيات الأسلوب للموسم الجديد",
+      "subtitle": "اكتشف الأزياء والملابس الفاخرة",
+      "cta": "تسوق الآن"
+    },
+    "products": {
+      "featured": "المنتجات المميزة",
+      "allProducts": "جميع المنتجات",
+      "addToCart": "أضف إلى السلة",
+      "orderNow": "اطلب الآن",
+      "viewDetails": "عرض التفاصيل",
+      "price": "السعر",
+      "originalPrice": "السعر الأصلي",
+      "discount": "خصم"
+    },
+    "footer": {
+      "quickLinks": "روابط سريعة",
+      "about": "من نحن",
+      "contact": "اتصل بنا",
+      "faqs": "الأسئلة الشائعة",
+      "shipping": "الشحن والتسليم",
+      "returns": "الإرجاع والاستبدال",
+      "privacy": "سياسة الخصوصية",
+      "terms": "شروط الخدمة",
+      "followUs": "تابعنا",
+      "rights": "جميع الحقوق محفوظة"
+    },
+    "cart": {
+      "empty": "سلتك فارغة",
+      "total": "الإجمالي",
+      "checkout": "الدفع",
+      "continueShopping": "متابعة التسوق"
+    },
+    "common": {
+      "loading": "جاري التحميل...",
+      "error": "حدث خطأ",
+      "success": "نجح",
+      "close": "إغلاق",
+      "save": "حفظ",
+      "cancel": "إلغاء"
+    }
+  }
+}
